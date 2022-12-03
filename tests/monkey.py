@@ -74,4 +74,4 @@ def go_home():
 
 def verify_module():
     #
-    pass
+    return True
