@@ -193,7 +193,7 @@ NS-6 | Отказ модуля либо подмена данных навига
 | Visual_control_camera | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
 | Visual_control_lidar | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
 | HW_control | 🟢 | 🟢/🔴 | 🟢 | 🟢 | 🔴 |
-| Sprayer | 🟢 | 🟢 | 🟢 | 🟢 | 🔴 |
+| Sprayer | 🟢 | 🔴 | 🟢 | 🟢 | 🔴 |
  
 
 
