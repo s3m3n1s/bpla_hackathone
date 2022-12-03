@@ -1,6 +1,8 @@
 confluent-kafka
 configparser
 flask
-pytest
-requests
+pytest~=7.2.0
+requests~=2.28.1
 kafka-python
+starlette~=0.22.0
+mock~=4.0.3
