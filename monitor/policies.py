@@ -199,11 +199,12 @@ def check_operation(event_id, details) -> bool:
     pop_list = []
     t = time.time()
     for i, conn in enumerate(action_connections_sub):
-        if conn[0] == src and conn[1] == event_id:
-            if t - conn[2] < err_resp_timout:
+        if t - conn[2] < err_resp_timout:
                 pop_list.append(i)
-                authorized = True
-                break
+        if conn[0] == src and conn[1] == event_id and not authorized:
+            pop_list.append(i)
+            pop_list = list(set(pop_list))
+            authorized = True
     pop_list.reverse()
     for i in pop_list:
         action_connections_sub.pop(i)
