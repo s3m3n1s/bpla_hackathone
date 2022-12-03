@@ -1,11 +1,11 @@
 # import requests
 # from starlette import status
-# import conftest
-from mock.mock import Mock
+import tests.monkey as mk
+from mock import Mock
 
 
 class Test1:
-    def test1_positive(self, is_drone_ready):
+    def test1_positive(self):
         """
         Включение дрона
         Проверка состояния модулей
@@ -22,27 +22,27 @@ class Test1:
         Возвращение на базу
         Отчет об окончании полетного задания
         """
-        is_drone_ready = Mock(return_value=True)
-        assert True == is_drone_ready
+        mk.is_drone_ready = Mock(return_value=True)
+        assert True == mk.is_drone_ready()
 
-        is_connect_to_control_center = Mock(return_value=True)
-        assert True == is_connect_to_control_center()
+        mk.is_connect_to_control_center = Mock(return_value=True)
+        assert True == mk.is_connect_to_control_center()
 
-        send_report_ready = Mock(return_value=True)
-        assert True == send_report_ready()
+        mk.send_report_ready = Mock(return_value=True)
+        assert True == mk.send_report_ready()
 
-        get_task = Mock(return_value="task2")
-        assert "task2" == get_task()
+        mk.get_task = Mock(return_value="task2")
+        assert "task2" == mk.get_task()
 
-        start_task = Mock(return_value=True)
-        assert True == start_task()
+        mk.start_task = Mock(return_value=True)
+        assert True == mk.start_task()
 
-        send_report_start = Mock(return_value=True)
-        assert True == send_report_start()
+        mk.send_report_start = Mock(return_value=True)
+        assert True == mk.send_report_start()
 
-        start_spray = Mock(return_value=True)
-        assert True == start_spray()
+        mk.start_spray = Mock(return_value=True)
+        assert True == mk.start_spray()
 
-        go_home = Mock(return_value=True)
-        assert True == go_home()
+        mk.go_home = Mock(return_value=True)
+        assert True == mk.go_home()
 

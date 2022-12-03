@@ -1,15 +1,11 @@
-import pytest
 
-
-# @pytest.fixture
 def connect_mc():
     pass
 
 
-# @pytest.fixture
 def is_drone_ready():
     """
-    собираю сообщения у /HW_control
+    собираю сообщение у /HW_control
     :return:
     """
     return True

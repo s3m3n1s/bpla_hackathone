@@ -1,3 +1,4 @@
+import tests.monkey
 from mock.mock import Mock
 
 
