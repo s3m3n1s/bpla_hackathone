@@ -328,8 +328,8 @@ NS-6 | Отказ модуля либо подмена данных навига
 | Navigate_module_GPS | 🟢 | 🟢 | 🟢 | 🟢/🔴 | 🟢 | 🟢 |
 | Navigate_module_glonass | 🟢 | 🟢 | 🟢 | 🟢/🔴 | 🟢 | 🟢 |
 | Navigate_module_inertional | 🟢 | 🟢 | 🟢 | 🟢/🔴 | 🟢 | 🟢 |
-| Visual_control_camera | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
-| Visual_control_lidar | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
+| Visual_control_camera | 🟢 | 🔴 | 🟢 | 🟢 | 🟢 | 🟢 |
+| Visual_control_lidar | 🟢 | 🟢/🔴 | 🟢 | 🟢 | 🟢 | 🟢 |
 | HW_control | 🟢 | 🟢/🔴 | 🟢 | 🟢 | 🔴 | 🟢/🔴 |
 | Sprayer | 🟢 | 🔴 | 🟢 | 🟢 | 🔴 | 🟢 |
 
@@ -340,7 +340,7 @@ NS-6 | Отказ модуля либо подмена данных навига
 | Navigate_module_GPS&Navigate_module_glonass | 🟢 | 🔴 | 🟢 | 🔴 | - | 🟢 |
 | Navigate_module_GPS&Navigate_module_inertional | 🟢 | 🔴 | 🟢 | 🔴 | - | 🟢 |
 | Navigate_module_glonass&Navigate_module_inertional | 🟢 | 🔴 | 🟢 | 🔴 | - | 🟢 |
-| Visual_control_camera&Visual_control_lidar | 🟢 | 🟢 | 🟢 | 🟢 | - | 🟢 |
+| Visual_control_camera&Visual_control_lidar | 🟢 | 🔴 | 🟢 | 🟢 | - | 🟢 |
 
  
 
