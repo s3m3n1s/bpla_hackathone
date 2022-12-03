@@ -5,9 +5,9 @@ import multiprocessing
 import random
 import threading
 import time
-from confluent_kafka import Consumer, OFFSET_BEGINNING, MODULE_NAME
+from confluent_kafka import Consumer, OFFSET_BEGINNING
 import json
-from producer import proceed_to_deliver
+from producer import proceed_to_deliver, MODULE_NAME
 import base64
 
 _requests_queue: multiprocessing.Queue = None

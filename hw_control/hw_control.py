@@ -9,8 +9,6 @@ from random import randint
 import time
 from math import ceil
 
-i = 1
-
 error_coeff = {
     "battary":      1,
     "camera":       10,
@@ -25,6 +23,7 @@ error_coeff = {
 discharge_speed = 0.3 # percent per second
 
 def health_monitor():
+    i = 1
     start_time = time.time()
 
     battary =   {"level": 100, "state": "discharging", "health": 100}
@@ -60,24 +59,20 @@ def health_monitor():
         # rnd = randint(1, 100)
         # gps['state'] = "ERR" if rnd >= error_coeff['gps'] else "OK"
         rnd = randint(1, 100)
-        if rnd >= error_coeff['battary']:
+        if rnd >= error_coeff['sprayer']:
             if rnd % 1 == 0:
-                battary['state'] = not battary['state'] 
+                sprayer['opened'] = not sprayer['opened'] 
             else:
-                battary['health'] = 2
-
-
-
-
+                sprayer['level'] = 0
 
         data = {
             "battary": battary,
-            "camera": camera,
-            "connector": connector,
-            "lidar": lidar,
-            "glonas": glonas,
-            "inertional": inertional,
-            "gps": gps,
+            # "camera": camera,
+            # "connector": connector,
+            # "lidar": lidar,
+            # "glonas": glonas,
+            # "inertional": inertional,
+            # "gps": gps,
             "sprayer": sprayer
         }
 
@@ -91,6 +86,7 @@ def health_monitor():
 
         proceed_to_deliver(i, details)
         i += 1
+        time.sleep(5)
 
         
 
@@ -112,5 +108,7 @@ if __name__ == '__main__':
     requests_queue = Queue()
     start_consumer(args, config)
     start_producer(args, config, requests_queue)
+
+    health_monitor()
 
 

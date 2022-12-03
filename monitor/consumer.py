@@ -14,19 +14,19 @@ log_error_flag = False
 SELF_TOPIC = "monitor"
 
 
-def go_back(id):
+def go_back(event_id):
     m = {
-        'id': id,
+        'id': event_id,
         'deliver_to': 'position',
         'type': 'data',
         'data': '',
         'source': 'central',
     }
-    proceed_to_deliver(id, m)
+    proceed_to_deliver(event_id, m)
 
 
 def handle_event(event_id, details):
-    print(f"[MONITOR][debug] handling event {id}, {details}")
+    print(f"[MONITOR][debug] handling event {event_id}, {details}")
     print(f"[MONITOR][info] handling event {event_id}, {details['source']}->{details['deliver_to']}: {details['data']}")
     global log_error_flag
     try:
@@ -39,25 +39,13 @@ def handle_event(event_id, details):
             # go_back(id)
             log_error_flag = True
     text_file.write(details + "\n")
-    
-    # if not (
-    #     (details['source'] == 'monitor'
-    #     or details['source'] == 'fly_control'
-    #     or details['source'] == 'fly_control'
-    #     or details['source'] == UNIC_NAME_MONITOR
-    #     or details['source'] == UNIC_NAME_FLY_CONTROL
-    #     )
-    #     and details['deliver_to'] == 'monitor'):
-    #     if check_operation(id, details):
-    #         proceed_to_deliver(id, details)
-    #     else:
-    #         print(f"[error] !!!! policies check failed, delivery unauthorized !!! id:"
-    #               f" {id}, {details['source']}->{details['deliver_to']}: {details['type']} ")
-    #         print(f"[error] suspicious event details: {details}")
-    #         details['deliver_to'] = 'monitor'
-    #         details['type'] = 'policy_error'
-    #         details['source'] = 'monitor'
-    proceed_to_deliver(event_id, details)
+
+    if check_operation(id, details):
+        proceed_to_deliver(id, details)
+    else:
+        print(f"[error] !!!! policies check failed, delivery unauthorized !!! id:"
+                f" {id}, {details['source']}->{details['deliver_to']}: {details['type']} ")
+        print(f"[error] suspicious event details: {details}")
 
 
 

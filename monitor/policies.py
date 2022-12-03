@@ -17,6 +17,10 @@ UNIC_NAME_NAVIGATE_INERTIAL = uuid4().__str__()
 UNIC_NAME_NAVIGATE_GPS = uuid4().__str__()
 UNIC_NAME_NAVIGATE_SPRAYER = uuid4().__str__()
 
+err_resp_timout = 10
+
+time_period = 60
+
 rate_limit = { # messages per minute
     'default': 20,
     'advanced': 60
@@ -24,24 +28,21 @@ rate_limit = { # messages per minute
 
 default_rules = {
     'sensor':{
-        'recieve_from': False,
         'send_to': ['fly_control'],
         'rate_limit': rate_limit['default'],
         'initiator': True,
         'data_type': ['data']
     },
     'actor':{
-        'recieve_from': ['fly_control'],
         'send_to': ['fly_control'],
         'rate_limit': rate_limit['default'],
         'initiator': False,
-        'data_type': ['data', 'ation']
+        'data_type': ['data']
     }
 }
 
 rules = {
     'auth': {
-        'recieve_from': ['fly_control', 'connector'],
         'send_to': ['fly_control', 'connector'],
         'rate_limit': rate_limit['default'],
         'initiator': ['connector'],
@@ -52,16 +53,15 @@ rules = {
         'rate_limit': rate_limit['advanced']
     },
     'connector':{
-        'recieve_from': ['auth'],
         'send_to': ['auth'],
         'rate_limit': rate_limit['default'],
         'initiator': False
     },
     'fly_control':{
-        'recieve_from': ['auth', 'camera', 'hw_control', 'lidar', 'navigate_inertional', 'navigate_glonas', 'navigate_gps'],
         'send_to': ['auth', 'sprayer'],
         'rate_limit': rate_limit['advanced'],
-        'initiator': ['auth', 'sprayer']
+        'initiator': ['auth', 'sprayer'],
+        'data_type': ['data', 'action']
     },
     'hw_control':{
         **default_rules['actor'],
@@ -88,6 +88,8 @@ rules = {
 }
 
 active_connections = {}
+
+action_connections = {}
 
 def error_msg(event_id):
     err_details = {
@@ -166,112 +168,7 @@ def set_names(id):
     proceed_to_deliver(id, sensors_details)
 
 
-def awaiting_response(id, operation, dst, start_time):
-    global confirmation_response
-    global count_direction_request
-    global count_direction_response
-    global motion_start_request
-    global stop_request
-    global stop_response
-    global pincoding_request
-    global lock_opening_request
-    global lock_closing_request
-    global operation_status_response
-    global activate_request
-    global deactivate_request
-    global gps_response
-    global gps_request
-
-    if operation == "confirmation":
-        while not confirmation_response:
-            time.sleep(0.2)
-            now = time.time()
-            if (now - start_time) > 10:
-                print(f"[confirmation] timeout exception!")
-                break
-    elif operation == "count_direction" and dst == "position":
-        while not count_direction_response:
-            time.sleep(0.2)
-            now = time.time()
-            if (now - start_time) > 10:
-                print(f"[count_direction] timeout exception!")
-                break
-    elif operation == "count_direction" and dst != "position":
-        while not motion_start_request:
-            time.sleep(0.2)
-            now = time.time()
-            if (now - start_time) > 10:
-                print(f"[count_direction_answer] timeout exception!")
-                break
-    elif operation == "motion_start":
-        while not stop_request:
-            time.sleep(0.2)
-            now = time.time()
-            if (now - start_time) > 100:
-                print(f"[motion_start] timeout exception!")
-                break
-
-    elif operation == "stop" and dst == "position":
-        while not stop_response:
-            time.sleep(0.2)
-            now = time.time()
-            if (now - start_time) > 10:
-                print(f"[stop_response] timeout exception!")
-                break
-    elif operation == "stop" and dst != "position":
-        while not gps_request:
-            time.sleep(0.2)
-            now = time.time()
-            if (now - start_time) > 10:
-                print(f"[gps_request] timeout exception!")
-                break
-    elif operation == "pincoding":
-        while not pincoding_request:
-            time.sleep(0.2)
-            now = time.time()
-            #here we are waiting for a long years
-            if (now - start_time) > 100:
-                print(f"[lock_opening] timeout exception!")
-                break
-    elif operation == "lock_opening":
-        while not pincoding_request:
-            time.sleep(0.2)
-            now = time.time()
-            #here we are waiting for a long years
-            if (now - start_time) > 100:
-                print(f"[lock_opening] timeout exception!")
-                # details['id'] = id
-                # details['deliver_to'] = 'position'
-                # details['operation'] = 'count_direction'
-                # details['source'] = UNIC_NAME_CENTRAL
-                # details['x1'] = 0
-                # details['y1'] = 0
-                # proceed_to_deliver(id, details)   
-                break
-    elif operation == "lock_closing":
-        while not lock_opening_request:
-            time.sleep(0.2)
-            now = time.time()
-            if (now - start_time) > 10:
-                print(f"[lock_closing] timeout exception!")
-                break
-    elif operation == "deactivate":
-        while (not lock_closing_request) and (not pincoding_request):
-            time.sleep(0.2)
-            now = time.time()
-            if (now - start_time) > 10:
-                print(f"[deactivate] timeout exception!")
-                break
-    elif operation == "where_am_i":
-        while not gps_response:
-            time.sleep(0.2)
-            now = time.time()
-            if (now - start_time) > 10:
-                print(f"[where_am_i] timeout exception!")
-                break
-        
-
-def check_operation(id, details):
+def check_operation(event_id, details) -> bool:
     authorized = False
     # print(f"[debug] checking policies for event {id}, details: {details}")
     # print(f"[info] checking policies for event {id},"\
@@ -279,256 +176,62 @@ def check_operation(id, details):
 
     src = details['source']
     dst = details['deliver_to']
-    type = details['type']
+    dtype = details['type']
 
-    if src not in rules or dst not in rules
+    if src not in rules or dst not in rules:
+        return False
+
+    from_rule = rules[src]
+
+    allowed_dtype = from_rule.get('data_type', True)
+    if allowed_dtype != True:
+        if allowed_dtype == False or allowed_dtype is None or dtype not in allowed_dtype:
+            return False
     
+    dest = from_rule.get('send_to', False)
+    if  dest != True:
+        if dest == False or dest is None or dst not in dest:
+            return False
+        
+
+    allowed_conn_start = from_rule.get('initiator', False)
+    action_connections_sub = action_connections.get(dst, [])
+    pop_list = []
+    t = time.time()
+    for i, conn in enumerate(action_connections_sub):
+        if conn[0] == src and conn[1] == event_id:
+            if t - conn[2] < err_resp_timout:
+                pop_list.append(i)
+                authorized = True
+                break
+    pop_list.reverse()
+    for i in pop_list:
+        action_connections_sub.pop(i)
+    if not authorized:
+        if allowed_conn_start == False or allowed_conn_start is None or dst not in allowed_conn_start:
+            return False 
+    
+    authorized = False
+
+    max_rate = rules.get('rate_limit', False)
+    if max_rate is None:
+        return False
+    if max_rate != False:
+        active = active_connections.get(src, None)
+        if active:
+            if (t-active[1]) < time_period:
+                if active[0] < max_rate:
+                    active[0] += 1
+                else:
+                    return False
+            else:
+                active[0] = 1
+                active[1] = t
+        else:
+            active_connections[src] = [1, t]
+
+    if dtype == 'action':
+        arr = action_connections.get(src, [])
+        arr.append(tuple(dst, event_id, time.time()))
     authorized = True
-    
-#     if  src == 'communication_in' and dst == 'central' and operation == 'ordering':
-#         if type(details['pincode']) == str \
-#                 and type(details['x1']) == int and type(details['y1']) == int \
-#                 and abs(details['x1']) <= 200 and abs(details['y1']) <= 200  and len(details) == 7 :
-#             if not ordering:
-#                 authorized = True
-#                 ordering = True
-
-#                 #
-#                 #set names
-#                 #
-#                 set_names(id)
-#                 #
-#                 #
-#                 #
-
-#                 #
-#                 #awaiting answer + antiddos
-#                 #
-#                 start_time = time.time()
-#                 confirmation_response = False
-#                 count_direction_request = False
-#                 threading.Thread(target=lambda: awaiting_response(id, operation, dst, start_time)).start()
-#                 #
-#                 #
-#                 #
-
-#             else:
-#                 e = {
-#                         'id':id,
-#                         'deliver_to': 'monitor',
-#                         'operation': 'reordering',
-#                         'source': 'monitor'
-#                     }
-#                 proceed_to_deliver(id, e)  
-#                 # details['source'] = UNIC_NAME_MONITOR
-#                 # details['operation'] = 'reordering'
-#                 # details['deliver_to'] = 'monitor'
-#                 # proceed_to_deliver(id, details)
-#         else:
-#             details['source'] = UNIC_NAME_MONITOR
-#             details['operation'] = 'invalid_order'
-#             details['deliver_to'] = 'monitor'
-#             proceed_to_deliver(id, details)
-    
-#     if src == UNIC_NAME_CENTRAL and dst == 'communication_out' \
-#         and operation == 'confirmation':
-#         #antiddos
-#         details['source'] = 'central'
-#         if not confirmation_response:
-#             confirmation_response = True
-#             authorized = True
-#         else:
-#             error_msg(id)    
-#     if src == UNIC_NAME_CENTRAL and dst == 'position' \
-#         and operation == 'count_direction':
-#         details['source'] = 'central'
-#         authorized = True
-#         start_time = time.time()
-#         count_direction_response = False
-#         threading.Thread(target=lambda: awaiting_response(id, operation, dst, start_time)).start()    
-
-#     if src == UNIC_NAME_POSITION and dst == 'central' \
-#         and operation == 'count_direction':
-        
-#         if not count_direction_response:
-#             count_direction_response = True   
-#             details['source'] = 'position'
-#             authorized = True 
-#             start_time = time.time()
-#             motion_start_request = False
-#             threading.Thread(target=lambda: awaiting_response(id, operation, dst, start_time)).start()
-#         else:
-#             error_msg(id)
-
-#     if src == UNIC_NAME_CENTRAL and dst == 'motion' \
-#         and operation == 'motion_start':    
-#         if not motion_start_request:
-#             motion_start_request = True
-#             details['source'] = 'central'
-#             authorized = True
-#             start_time = time.time()
-#             stop_request = False
-#             threading.Thread(target=lambda: awaiting_response(id, operation, dst, start_time)).start()
-#         else:
-#             error_msg(id)    
-
-#     if src == UNIC_NAME_MOTION and dst == 'position' \
-#         and operation == 'motion_start':
-#         #and details['verified'] is True:
-#         details['source'] = 'motion'
-#         authorized = True    
-    
-#     if src == UNIC_NAME_MOTION and dst == 'position' \
-#         and operation == 'stop':
-#         if not stop_request:
-#             stop_request = True
-#             details['source'] = 'motion'
-#             authorized = True
-#             start_time = time.time()
-#             stop_response = False
-#             threading.Thread(target=lambda: awaiting_response(id, operation, dst, start_time)).start()   
-#         else:
-#             error_msg(id) 
-#     if src == UNIC_NAME_POSITION and dst == 'central' \
-#         and operation == 'stop':
-#         if not stop_response:
-#             stop_response = True
-#             details['source'] = 'position'
-#             authorized = True
-#             start_time = time.time()
-#             gps_request = False
-#             threading.Thread(target=lambda: awaiting_response(id, operation, dst, start_time)).start()
-#         else:
-#             error_msg(id)
-
-
-#     # here should understand that when hmi would be hardware, UNIC_NAME_HMI will be able to be, 
-#     # but now there are some software troubles to do it
-#     if src == 'hmi' and dst == 'central' \
-#         and operation == 'pincoding':
-#         #if not activate_request:
-#             #activate_request = True
-#         authorized = True
-#         start_time = time.time()
-#         pincoding_request = False
-#         threading.Thread(target=lambda: awaiting_response(id, operation, dst, start_time)).start()    
-#     if src == UNIC_NAME_CENTRAL and dst == 'sensors' \
-#         and operation == 'lock_opening':
-#         details['source'] = 'central'
-#         if not pincoding_request:
-#             try:
-#                 files = os.listdir("/storage")
-#                 #print (files)
-#                 files = [file for file in files if "Picture_" in file]
-#                 #print (files)
-#                 file = max(files, key=lambda i: os.stat("/storage/"+i).st_mtime)
-#                 #print(file)
-#                 if (time.time() - os.stat("/storage/"+file).st_mtime) < 30:
-#                     print("Picture was founded!")
-#                     pincoding_request = True
-#                     authorized = True
-#                     lock_closing_request = False
-#                     start_time = time.time()
-#                     threading.Thread(target=lambda: awaiting_response(id, operation, dst, start_time)).start()
-#                 else:
-#                     error_msg(id)
-#                     count_direction_response = False
-#                     print('No picture founded!')
-#                     pincoding_request = True
-#                     m = {
-#                         'id':id,
-#                         'deliver_to': 'position',
-#                         'operation': 'count_direction',
-#                         'source': 'central',
-#                         'x1': 0,
-#                         'y1': 0
-#                     }
-#                     proceed_to_deliver(id, m)   
-#             except Exception as e:
-#                 print(f"[error] failed to find picture: {e}")
-#         else:
-#             error_msg(id)
-            
-# #     if src == 'sensors' and dst == 'central' \
-# #         and operation == 'lock_opening':
-# #         authorized = True
-#     if  src == UNIC_NAME_SENSORS and dst == 'central'\
-#         and operation == 'lock_closing':
-#         details['source'] = 'sensors'
-#         if not lock_closing_request:
-#             lock_closing_request = True
-#             authorized = True
-#             start_time = time.time()
-#             threading.Thread(target=lambda: awaiting_response(id, operation, dst, start_time)).start()   
-#         else:
-#             error_msg(id)
-#     if  src == UNIC_NAME_CENTRAL and dst == 'communication_out'\
-#         and operation == 'operation_status' and len(details) == 5:
-#         details['source'] = 'central'
-#         authorized = True
-#         ordering = False
-#     if  src == UNIC_NAME_CENTRAL and dst == 'camera'\
-#         and operation == 'activate':
-#         details['source'] = 'central'
-#         authorized = True
-#         activate_request = False
-#         start_time = time.time()
-#         threading.Thread(target=lambda: awaiting_response(id, operation, dst, start_time)).start()  
-         
-#     if  src == UNIC_NAME_CENTRAL and dst == 'camera'\
-#         and operation == 'deactivate':
-#         if not lock_closing_request:
-#             lock_closing_request = True
-#             details['source'] = 'central'
-#             authorized = True
-#         elif not pincoding_request:
-#             pincoding_request = True
-#             details['source'] = 'central'
-#             authorized = True
-#         else:
-#             error_msg(id)
-        
-
-#     if  src == UNIC_NAME_MONITOR and dst == 'monitor':
-#         details['source'] = 'monitor'
-#         authorized = True
-#     if  src == UNIC_NAME_CENTRAL and dst == 'monitor':
-#         details['source'] = 'central'
-#         authorized = True
-
-    
-#     if  src == UNIC_NAME_CENTRAL and dst == 'gps'\
-#         and operation == 'where_am_i':
-#         if not gps_request:
-#             gps_request = True
-#             details['source'] = 'central'
-#             authorized = True
-#             start_time = time.time()
-#             gps_response = False
-#             threading.Thread(target=lambda: awaiting_response(id, operation, dst, start_time)).start()
-#         else:
-#             error_msg(id)
-#     #simple checking length of messages
-#     if  src == UNIC_NAME_GPS and dst == 'central'\
-#         and operation == 'gps' and len(details) == 6:
-#         if not gps_response:
-#             gps_response = True
-#             details['source'] = 'gps'
-#             authorized = True
-#         else:
-#             error_msg(id)
-#     if  src == UNIC_NAME_GPS and dst == 'central'\
-#         and operation == 'gps_error' and len(details) == 4:
-#         if not gps_response:
-#             gps_response = True
-#             details['source'] = 'gps'
-#             authorized = True
-#         else:
-#             error_msg(id)
-#     if  src == UNIC_NAME_POSITION and dst == 'gps'\
-#         and operation == 'nonexistent':
-#         details['source'] = 'position'
-#         authorized = True
-        
-
     return authorized
