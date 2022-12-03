@@ -17,20 +17,66 @@ UNIC_NAME_NAVIGATE_INERTIAL = uuid4().__str__()
 UNIC_NAME_NAVIGATE_GPS = uuid4().__str__()
 UNIC_NAME_NAVIGATE_SPRAYER = uuid4().__str__()
 
-confirmation_response = True
-count_direction_request = True
-count_direction_response = True
-motion_start_request = True
-stop_request = True
-stop_response = True
-pincoding_request = True
-lock_opening_request = True
-lock_closing_request = True
-operation_status_response = True
-activate_request = True
-deactivate_request = True
-gps_response = True
-gps_request = True
+rate_limit = { # messages per minute
+    'default': 20,
+    'advanced': 60
+}
+
+default_rules = {
+    'sensor':{
+        'recieve_from': False,
+        'send_to': ['fly_control'],
+        'rate_limit': rate_limit['default'],
+        'initiator': True
+    },
+    'actor':{
+        'recieve_from': ['fly_control'],
+        'send_to': ['fly_control'],
+        'rate_limit': rate_limit['default'],
+        'initiator': False
+    }
+}
+
+rules = {
+    'auth': {
+        'recieve_from': ['fly_control', 'connector'],
+        'send_to': ['fly_control', 'connector'],
+        'rate_limit': False,
+        'initiator': []
+    },
+    'camera':{
+        **default_rules['sensor'],
+        'rate_limit': rate_limit['advanced']
+    },
+    'connector':{
+
+    },
+    'fly_control':{
+
+    },
+    'hw_control':{
+        **default_rules['actor'],
+        'recieve_from': ['sprayer'],
+        'initiator': True
+    },
+    'lidar':{
+        **default_rules['sensor'],
+        'rate_limit': rate_limit['advanced']
+    },
+    'navigate_inertional':{
+        **default_rules['sensor']
+    },
+    'navigate_glonas':{
+        **default_rules['sensor']
+    },
+    'navigate_gps':{
+        **default_rules['sensor']
+    },
+    'sprayer':{
+        **default_rules['actor'],
+        'send_to': ['hw_control']
+    }
+}
 
 
 def error_msg(id):

@@ -1,0 +1,17 @@
+FROM python:3.8-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+
+ENV PYTHONUNBUFFERED=1
+
+COPY requirements.txt .
+RUN python -m pip install -r requirements.txt
+
+COPY navigate_glonas /navigate_glonas
+COPY config.ini /navigate_glonas/
+
+RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /navigate_glonas
+USER appuser
+
+WORKDIR /navigate_glonas
+CMD ["python", "navigate_glonas.py", "config.ini"]

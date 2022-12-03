@@ -28,7 +28,7 @@ def producer_job(_, config: dict, requests_queue: multiprocessing.Queue):
             event_details = requests_queue.get(block=False)
         except Exception:
             print(f"[{MODULE_NAME}] EMPTY QUEUE")
-            time.sleep(2)
+            # time.sleep(2)
             event_details = None
         if event_details:
             print(f"[{MODULE_NAME}] SENDING {event_details}")
@@ -45,4 +45,4 @@ def producer_job(_, config: dict, requests_queue: multiprocessing.Queue):
 def start_producer(args, config: dict, requests_queue: multiprocessing.Queue) -> None:
     global _requests_queue
     _requests_queue = requests_queue
-    threading.Thread(target=lambda: producer_job(args, config, requests_queue)).start()
+    threading.Thread(target=lambda: producer_job(args, config, requests_queue)).start() 
