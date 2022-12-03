@@ -1,0 +1,17 @@
+FROM python:3.8-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+
+ENV PYTHONUNBUFFERED=1
+
+COPY requirements.txt .
+RUN python -m pip install -r requirements.txt
+
+COPY fly_control /fly_control
+COPY config.ini /fly_control/
+
+RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /fly_control
+USER appuser
+
+WORKDIR /fly_control
+CMD ["python", "fly_control.py", "config.ini"]
