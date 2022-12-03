@@ -27,13 +27,15 @@ default_rules = {
         'recieve_from': False,
         'send_to': ['fly_control'],
         'rate_limit': rate_limit['default'],
-        'initiator': True
+        'initiator': True,
+        'data_type': ['data']
     },
     'actor':{
         'recieve_from': ['fly_control'],
         'send_to': ['fly_control'],
         'rate_limit': rate_limit['default'],
-        'initiator': False
+        'initiator': False,
+        'data_type': ['data', 'ation']
     }
 }
 
@@ -41,18 +43,25 @@ rules = {
     'auth': {
         'recieve_from': ['fly_control', 'connector'],
         'send_to': ['fly_control', 'connector'],
-        'rate_limit': False,
-        'initiator': []
+        'rate_limit': rate_limit['default'],
+        'initiator': ['connector'],
+        'data_type': ['data', 'ation']
     },
     'camera':{
         **default_rules['sensor'],
         'rate_limit': rate_limit['advanced']
     },
     'connector':{
-
+        'recieve_from': ['auth'],
+        'send_to': ['auth'],
+        'rate_limit': rate_limit['default'],
+        'initiator': False
     },
     'fly_control':{
-
+        'recieve_from': ['auth', 'camera', 'hw_control', 'lidar', 'navigate_inertional', 'navigate_glonas', 'navigate_gps'],
+        'send_to': ['auth', 'sprayer'],
+        'rate_limit': rate_limit['advanced'],
+        'initiator': ['auth', 'sprayer']
     },
     'hw_control':{
         **default_rules['actor'],
@@ -78,15 +87,16 @@ rules = {
     }
 }
 
+active_connections = {}
 
-def error_msg(id):
+def error_msg(event_id):
     err_details = {
-        "id": id,
+        "id": event_id,
         "operation": "internal_error",
         "deliver_to": "monitor",
         "source": UNIC_NAME_MONITOR
     }
-    proceed_to_deliver(id, err_details)
+    proceed_to_deliver(event_id, err_details)
 
 
 def set_names(id):
@@ -262,30 +272,6 @@ def awaiting_response(id, operation, dst, start_time):
         
 
 def check_operation(id, details):
-    global ordering
-    global UNIC_NAME_MOTION
-    global UNIC_NAME_CAMERA
-    global UNIC_NAME_CENTRAL
-    global UNIC_NAME_COMMUNICATION_IN
-    global UNIC_NAME_COMMUNICATION_OUT
-    global UNIC_NAME_GPS
-    global UNIC_NAME_POSITION
-    global UNIC_NAME_SENSORS
-    global UNIC_NAME_MONITOR
-    global confirmation_response
-    global count_direction_request
-    global count_direction_response
-    global motion_start_request
-    global stop_request
-    global stop_response
-    global pincoding_request
-    global lock_opening_request
-    global lock_closing_request
-    global operation_status_response
-    global activate_request
-    global deactivate_request
-    global gps_response
-    global gps_request
     authorized = False
     # print(f"[debug] checking policies for event {id}, details: {details}")
     # print(f"[info] checking policies for event {id},"\
@@ -294,6 +280,8 @@ def check_operation(id, details):
     src = details['source']
     dst = details['deliver_to']
     type = details['type']
+
+    if src not in rules or dst not in rules
     
     authorized = True
     
