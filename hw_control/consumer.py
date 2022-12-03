@@ -13,6 +13,8 @@ import base64
 _requests_queue: multiprocessing.Queue = None
 MESSAGE_CHANEL = MODULE_NAME
 
+sprayer_info = {"opened": False, "level": 100}
+
 
 def handle_event(event_id, details_str):
     details = json.loads(details_str)
