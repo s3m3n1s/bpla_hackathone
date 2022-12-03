@@ -335,12 +335,12 @@ NS-6 | Отказ модуля либо подмена данных навига
 
 Так же можно рассмотреть возможные нарушения ЦБ дрона, в зависимости от взломанных (скомпрометированных) пар сервисов, которые носят близкие функциональные предназначения
 
-| Сервис | ЦБД-1 | ЦБД-2 | ЦБД-3 | ЦБД-4 | ЦБД-5	|
+| Сервис | ЦБД-1 | ЦБД-2 | ЦБД-3 | ЦБД-4 | ЦБД-5	| ЦБД-6 |
 |------|:---:|:---:|:---:|:---:|:---:|:---:|
 | Navigate_module_GPS&Navigate_module_glonass | 🟢 | 🔴 | 🟢 | 🔴 | - | 🟢 |
 | Navigate_module_GPS&Navigate_module_inertional | 🟢 | 🔴 | 🟢 | 🔴 | - | 🟢 |
 | Navigate_module_glonass&Navigate_module_inertional | 🟢 | 🔴 | 🟢 | 🔴 | - | 🟢 |
-| Visual_control_camera&Visual_control_lidar | 🟢 | 🟢 | 🟢 | 🟢 | - |🟢 |
+| Visual_control_camera&Visual_control_lidar | 🟢 | 🟢 | 🟢 | 🟢 | - | 🟢 |
 
  
 
